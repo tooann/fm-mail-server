@@ -4,16 +4,25 @@ const mongoose = require('mongoose');
 
 router.post('/register', async (ctx) => {
   const User = mongoose.model('User');
-  let newUser  = new User(ctx.request.body);
-  await newUser.save().then(() => {
-    ctx.body = {
-      code: 200,
-      message: '注册成功'
-    }
-  }).catch(() => {
-    ctx.body = {
-      code: 500,
-      message: '注册失败'
+  await User.findOne({userName: ctx.request.body.userName}).exec().then(async (result) => {
+    if (!result) {
+      let newUser  = new User(ctx.request.body);
+      await newUser.save().then(() => {
+        ctx.body = {
+          code: 200,
+          message: '注册成功'
+        }
+      }).catch(() => {
+        ctx.body = {
+          code: 500,
+          message: '注册失败'
+        }
+      })
+    } else {
+      ctx.body = {
+        code: 500,
+        message: '用户名已存在'
+      }
     }
   })
 })
@@ -31,7 +40,8 @@ router.post('/login', async (ctx) => {
           ctx.body = {
             code: 200,
             message: '登录成功',
-            userName: result.userName
+            userName: result.userName,
+            userId: result._id
           }
         } else {
           ctx.body = {
